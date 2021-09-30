@@ -31,6 +31,7 @@ def is_current_week(reference_date: date) -> bool:
 
 def publish_yesterdays_results():
     try:
+        logger.debug("Attempting to get yesterday's info")
         yesterdays_info = get_yesterdays_info()
     except NoDataFoundException as e:
         logger.warning(e, exc_info=True)
@@ -40,6 +41,8 @@ def publish_yesterdays_results():
         return
 
     yesterday = date.today() - timedelta(days=1)
+
+    logger.debug(f"Yesterday's date is {yesterday}")
 
     tweet_template_params = YesterdaysResultsTweetParams(
         yesterdays_date = yesterday.strftime("%d/%m"),
@@ -57,6 +60,14 @@ def publish_yesterdays_results():
         percentage_change_number = round(yesterdays_info["percentage_change"], 1)
     )
 
+    logger.debug(f"Assembled tweet params: {tweet_template_params}")
+
     tweet_message = TWEET_TEMPLATE.substitute(tweet_template_params)
 
-    tweet_service.tweet_thread(tweet_message)
+    logger.debug(f"Assembled tweet message: {tweet_message}")
+
+    try:
+        logger.debug("Attempting to tweet")
+        tweet_service.tweet_thread(tweet_message)
+    except Exception as e:
+        logger.error(f"Error while tweeting: {e}", exc_info=True)

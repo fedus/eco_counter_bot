@@ -12,6 +12,7 @@ logger.setLevel(config.get("LOG_LEVEL"))
 def run():
     logger.info(f"eco_counter_bot started at {datetime.now()}")
     print(publish_yesterdays_results())
+    logger.info(f"Run finished at {datetime.now()}")
 
 if __name__ == "__main__":
     run()

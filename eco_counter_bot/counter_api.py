@@ -27,6 +27,9 @@ def get_counts(counter: CounterConfig, start_date: date, end_date: date, interva
     )
 
     request_url = counter["url_template"].substitute(template_values)
+
+    logger.debug(f"Attempting API request with template values {template_values} and request url {request_url}")
+
     r = requests.get(request_url)
 
     if r.status_code != 200:

@@ -64,7 +64,7 @@ def publish_yesterdays_results():
 
     tweet_message = TWEET_TEMPLATE.substitute(tweet_template_params)
 
-    logger.debug(f"Assembled tweet message: {tweet_message}")
+    logger.info(f"Assembled tweet message: {tweet_message}")
 
     try:
         logger.debug("Attempting to tweet")

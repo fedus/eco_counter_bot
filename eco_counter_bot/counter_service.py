@@ -1,9 +1,14 @@
+import logging
+
 from datetime import date, timedelta
 from functools import reduce
+from eco_counter_bot.models import DateRange
 
 from eco_counter_bot.models import Interval, CounterData, CounterWithSingleCount, ProcessedCountData
 from eco_counter_bot.counter_api import get_counts, get_count_for_yesterday
 from eco_counter_bot.counters import counters
+
+logger = logging.getLogger(f"eco_counter_bot.{__name__}")
 
 class CounterDataMismatch(Exception):
     pass
@@ -46,9 +51,6 @@ def get_yesterdays_info():
     last_week_start = this_week_start - timedelta(weeks=1)
     last_week_relative_end = this_week_end - timedelta(weeks=1)
 
-    print(this_week_start, this_week_end)
-    print(last_week_start, last_week_relative_end)
-
     counters_with_counts = list(map(lambda counter: {"counter": counter, "counts": get_counts(counter, last_week_start, today, Interval.DAYS)}, counters))
     summed_data = flatten(list(map(lambda counter_with_count: counter_with_count["counts"], counters_with_counts)))
 
@@ -64,5 +66,11 @@ def get_yesterdays_info():
 
     percentage_change = (this_week_total_count - last_week_relative_total_count) / last_week_relative_total_count * 100
 
-    print(yesterdays_counts_sorted)
-    print(last_week_relative_total_count, this_week_total_count, round(percentage_change, 1))
+    return ProcessedCountData(
+        measured_period=DateRange(start=this_week_start, end=this_week_end),
+        reference_period=DateRange(start=last_week_start, end=last_week_relative_end),
+        ordered_counts=yesterdays_counts_sorted,
+        measured_period_total_count=this_week_total_count,
+        reference_period_total_count=last_week_relative_total_count,
+        percentage_change=percentage_change
+    )

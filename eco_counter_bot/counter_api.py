@@ -1,8 +1,11 @@
 import requests
+import logging
 
 from datetime import date, datetime, timedelta
 
 from eco_counter_bot.models import Interval, CounterConfig, CounterTemplateValues, DataPoint, CounterData
+
+logger = logging.getLogger(f"eco_counter_bot.{__name__}")
 
 class NoDataFoundException(Exception):
     pass

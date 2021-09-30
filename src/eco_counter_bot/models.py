@@ -23,3 +23,19 @@ class DataPoint(TypedDict):
     count: int
 
 CounterData = list[DataPoint]
+
+class DateRange(TypedDict):
+    start: date
+    end: date
+
+class CounterWithSingleCount(TypedDict):
+    counter: CounterConfig
+    count: int
+
+class ProcessedCountData(TypedDict):
+    measured_period: DateRange
+    reference_period: DateRange
+    ordered_counts: list[CounterWithSingleCount]
+    measured_period_total_count: int
+    reference_period_total_count: int
+    percentage_change: float

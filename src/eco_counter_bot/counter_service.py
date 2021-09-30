@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from functools import reduce
 
-from eco_counter_bot.models import Interval, CounterData
+from eco_counter_bot.models import Interval, CounterData, CounterWithSingleCount, ProcessedCountData
 from eco_counter_bot.counter_api import get_counts, get_count_for_yesterday
 from eco_counter_bot.counters import counters
 
@@ -52,7 +52,7 @@ def get_yesterdays_info():
     counters_with_counts = list(map(lambda counter: {"counter": counter, "counts": get_counts(counter, last_week_start, today, Interval.DAYS)}, counters))
     summed_data = flatten(list(map(lambda counter_with_count: counter_with_count["counts"], counters_with_counts)))
 
-    counters_with_yesterdays_counts = list(map(lambda counter_with_counts: {"counter": counter_with_counts["counter"], "count": get_count_for_yesterday(counter_with_counts["counts"]) }, counters_with_counts))
+    counters_with_yesterdays_counts = list(map(lambda counter_with_counts: CounterWithSingleCount(counter=counter_with_counts["counter"], count=get_count_for_yesterday(counter_with_counts["counts"])), counters_with_counts))
 
     yesterdays_counts_sorted = sorted(counters_with_yesterdays_counts, key=lambda count_data: count_data["count"], reverse=True)
 

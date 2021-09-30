@@ -7,7 +7,7 @@ from eco_counter_bot.bot import publish_yesterdays_results
 
 logging.basicConfig(encoding='utf-8')
 logger = logging.getLogger(f"eco_counter_bot")
-logger.setLevel(config.get("LOG_LEVEL"))
+logger.setLevel(config.get("LOG_LEVEL", "INFO"))
 
 def run():
     logger.info(f"eco_counter_bot started at {datetime.now()}")

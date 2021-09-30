@@ -36,12 +36,12 @@ def get_counts(counter: CounterConfig, start_date: date, end_date: date, interva
 
 def get_count_for_day(counter_data: CounterData, day: date):
     if not len(counter_data):
-        raise NoDataFoundException("No data or unexpected data found")
+        raise NoDataFoundException(f"No data or unexpected data found (requested date {day.strftime('%Y/%m/%d')})")
 
     data_match = next(filter(lambda count: count["date"] == day, counter_data), None)
 
     if not data_match:
-        raise NoDataFoundException(f"Requested day not found in returned data, looked for {day}, found {counter_data}")
+        raise NoDataFoundException(f"Requested day not found in returned data, looked for {day.strftime('%Y/%m/%d')}, found {counter_data}")
 
     return data_match["count"]
 

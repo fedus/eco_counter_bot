@@ -36,6 +36,22 @@ class ProcessedCountData(TypedDict):
     measured_period: DateRange
     reference_period: DateRange
     ordered_counts: list[CounterWithSingleCount]
+    ordered_counts_total: int
     measured_period_total_count: int
     reference_period_total_count: int
     percentage_change: float
+
+class YesterdaysResultsTweetParams(TypedDict):
+    yesterdays_date: str
+    count_total: int
+    counter_name_1: str
+    counter_name_2: str
+    counter_name_3: str
+    counter_count_1: int
+    counter_count_2: int
+    counter_count_3: int
+    week_reference: str
+    count_last_week_total: int
+    count_preceding_week_total: int
+    percentage_change_emoji: str
+    percentage_change_number: float

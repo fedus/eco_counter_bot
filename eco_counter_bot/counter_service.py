@@ -3,6 +3,7 @@ import logging
 from datetime import date, timedelta
 from functools import reduce
 from eco_counter_bot.models import DateRange
+from copy import deepcopy
 
 from eco_counter_bot.models import Interval, CounterData, CounterWithSingleCount, ProcessedCountData
 from eco_counter_bot.counter_api import get_counts, get_count_for_yesterday
@@ -27,7 +28,7 @@ def flatten(bike_counts: list[CounterData]) -> CounterData:
         if data_count != check_data_count or first_date != check_first_date or last_date != check_last_date:
             raise CounterDataMismatch("Cannot flatten data due to a data mismatch")
 
-    flattened_count = check_counts
+    flattened_count = deepcopy(check_counts)
     other_counts = bike_counts[1:]
 
     for other_count in other_counts:
@@ -44,33 +45,37 @@ def sum_counts(counter_data: CounterData) -> int:
 
 def get_yesterdays_info():
     today = date.today()
+    yesterday = today - timedelta(days=1)
 
-    this_week_start = today - timedelta(days=today.weekday())
-    this_week_end = today - timedelta(days=1)
+    yesterdays_week_start = yesterday - timedelta(days=yesterday.weekday())
+    yesterdays_week_relative_end = yesterday
 
-    last_week_start = this_week_start - timedelta(weeks=1)
-    last_week_relative_end = this_week_end - timedelta(weeks=1)
+    preceding_week_start = yesterdays_week_start - timedelta(weeks=1)
+    preceding_week_relative_end = yesterdays_week_relative_end - timedelta(weeks=1)
 
-    counters_with_counts = list(map(lambda counter: {"counter": counter, "counts": get_counts(counter, last_week_start, today, Interval.DAYS)}, counters))
+    counters_with_counts = list(map(lambda counter: {"counter": counter, "counts": get_counts(counter, preceding_week_start, today, Interval.DAYS)}, counters))
     summed_data = flatten(list(map(lambda counter_with_count: counter_with_count["counts"], counters_with_counts)))
+
+    yesterdays_total = summed_data[-1]["count"]
 
     counters_with_yesterdays_counts = list(map(lambda counter_with_counts: CounterWithSingleCount(counter=counter_with_counts["counter"], count=get_count_for_yesterday(counter_with_counts["counts"])), counters_with_counts))
 
     yesterdays_counts_sorted = sorted(counters_with_yesterdays_counts, key=lambda count_data: count_data["count"], reverse=True)
 
-    last_week_relative_combined = filter_counts_by_date(summed_data, last_week_start, last_week_relative_end)
-    this_week_combined = filter_counts_by_date(summed_data, this_week_start, today)
+    preceeding_week_relative_combined = filter_counts_by_date(summed_data, preceding_week_start, preceding_week_relative_end)
+    yesterdays_week_combined = filter_counts_by_date(summed_data, yesterdays_week_start, today)
 
-    last_week_relative_total_count = sum_counts(last_week_relative_combined)
-    this_week_total_count = sum_counts(this_week_combined)
+    preceeding_week_relative_total_count = sum_counts(preceeding_week_relative_combined)
+    yesterdays_week_total_count = sum_counts(yesterdays_week_combined)
 
-    percentage_change = (this_week_total_count - last_week_relative_total_count) / last_week_relative_total_count * 100
+    percentage_change = (yesterdays_week_total_count - preceeding_week_relative_total_count) / preceeding_week_relative_total_count * 100
 
     return ProcessedCountData(
-        measured_period=DateRange(start=this_week_start, end=this_week_end),
-        reference_period=DateRange(start=last_week_start, end=last_week_relative_end),
+        measured_period=DateRange(start=yesterdays_week_start, end=yesterdays_week_relative_end),
+        reference_period=DateRange(start=preceding_week_start, end=preceding_week_relative_end),
         ordered_counts=yesterdays_counts_sorted,
-        measured_period_total_count=this_week_total_count,
-        reference_period_total_count=last_week_relative_total_count,
+        ordered_counts_total=yesterdays_total,
+        measured_period_total_count=yesterdays_week_total_count,
+        reference_period_total_count=preceeding_week_relative_total_count,
         percentage_change=percentage_change
     )

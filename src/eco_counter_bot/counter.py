@@ -87,7 +87,7 @@ def filter_counts_by_date(counter_data: CounterData, start_date: date, end_date:
     return list(filter(lambda data_point: start_date <= data_point[0] <= end_date, counter_data))
 
 def sum_counts(counter_data: CounterData) -> int:
-    return reduce(lambda data_point_a, data_point_b: data_point_a[1] + data_point_b[1], counter_data)
+    return reduce(lambda current_sum, data_point: current_sum + data_point[1], counter_data, 0)
 
 today = date.today()
 this_week_start = today - timedelta(days=today.weekday())
@@ -103,10 +103,21 @@ viaduc_data = get_counts(counter_viaduc, last_week_start, today, Interval.DAYS)
 lift_data = get_counts(counter_lift, last_week_start, today, Interval.DAYS)
 summed_data = flatten(glacis_data, viaduc_data, lift_data)
 
+yesterdays_counts = [
+    { "counter": "glacis", "count": get_count_for_yesterday(glacis_data) },
+    { "counter": "viaduc", "count": get_count_for_yesterday(viaduc_data) },
+    { "counter": "lift", "count": get_count_for_yesterday(lift_data) },
+]
+
+yesterdays_counts_sorted = sorted(yesterdays_counts, key=lambda count_data: count_data["count"], reverse=True)
+
 last_week_relative_combined = filter_counts_by_date(summed_data, last_week_start, last_week_relative_end)
 this_week_combined = filter_counts_by_date(summed_data, this_week_start, today)
 
 last_week_relative_total_count = sum_counts(last_week_relative_combined)
 this_week_total_count = sum_counts(this_week_combined)
 
-print(last_week_relative_total_count, this_week_total_count)
+percentage_change = (this_week_total_count - last_week_relative_total_count) / last_week_relative_total_count * 100
+
+print(yesterdays_counts_sorted)
+print(last_week_relative_total_count, this_week_total_count, round(percentage_change, 1))

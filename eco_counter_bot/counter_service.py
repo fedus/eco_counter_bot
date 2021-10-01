@@ -28,14 +28,6 @@ def get_count_for_day(counter_data: CounterData, day: date) -> int:
 
     return data_match["count"]
 
-def get_count_for_yesterday(counter_data: CounterData) -> int:
-    yesterday = date.today() - timedelta(days=1)
-    return get_count_for_day(counter_data, yesterday)
-
-def get_count_for_yesterday_one_year_ago(counter_data: CounterData) -> int:
-    yesterday_one_year_ago = date.today() + relativedelta(days=-1, years=-1)
-    return get_count_for_day(counter_data, yesterday_one_year_ago)
-
 def flatten(bike_counts: list[CounterData]) -> CounterData:
     check_counts = bike_counts[0]
     check_data_count = len(check_counts)

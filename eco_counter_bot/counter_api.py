@@ -7,9 +7,6 @@ from eco_counter_bot.models import Interval, CounterConfig, CounterTemplateValue
 
 logger = logging.getLogger(f"eco_counter_bot.{__name__}")
 
-class NoDataFoundException(Exception):
-    pass
-
 class EcoCounterApiError(Exception):
     pass
 
@@ -20,9 +17,11 @@ def parse_date_from_api(date_: str) -> date:
     return datetime.strptime(date_, "%m/%d/%Y").date()
 
 def get_counts(counter: CounterConfig, start_date: date, end_date: date, interval: Interval) -> CounterData:
+    exclusive_end_date_for_api = end_date + timedelta(days=1)
+
     template_values = CounterTemplateValues(
         start_date=parse_date_for_api(start_date),
-        end_date=parse_date_for_api(end_date),
+        end_date=parse_date_for_api(exclusive_end_date_for_api),
         interval=interval.value
     )
 
@@ -37,17 +36,3 @@ def get_counts(counter: CounterConfig, start_date: date, end_date: date, interva
 
     return list(map(lambda datapoint: DataPoint(date=parse_date_from_api(datapoint[0]), count=int(datapoint[1])),r.json()))
 
-def get_count_for_day(counter_data: CounterData, day: date) -> int:
-    if not len(counter_data):
-        raise NoDataFoundException(f"No data or unexpected data found (requested date {day.strftime('%Y/%m/%d')})")
-
-    data_match = next(filter(lambda count: count["date"] == day, counter_data), None)
-
-    if not data_match:
-        raise NoDataFoundException(f"Requested day not found in returned data, looked for {day.strftime('%Y/%m/%d')}, found {counter_data}")
-
-    return data_match["count"]
-
-def get_count_for_yesterday(counter_data: CounterData) -> int:
-    yesterday = date.today() - timedelta(days=1)
-    return get_count_for_day(counter_data, yesterday)

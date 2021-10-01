@@ -32,14 +32,15 @@ class CounterWithSingleCount(TypedDict):
     counter: CounterConfig
     count: int
 
-class ProcessedCountData(TypedDict):
-    measured_period: DateRange
-    reference_period: DateRange
-    ordered_counts: list[CounterWithSingleCount]
-    ordered_counts_total: int
-    measured_period_total_count: int
-    reference_period_total_count: int
-    percentage_change: float
+class CounterWithCounts(TypedDict):
+    counter: CounterConfig
+    counts: CounterData
+
+class CountHighlights(TypedDict):
+    flattened_counts: CounterData
+    most_recent_flattened_count: int
+    most_recent_counts_sorted: list[CounterWithSingleCount]
+    period_total_count: int
 
 class YesterdaysResultsTweetParams(TypedDict):
     yesterdays_date: str

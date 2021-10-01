@@ -29,7 +29,7 @@ def is_current_week(reference_date: date) -> bool:
     todays_date_week = date.today().isocalendar().week
     return reference_date_week == todays_date_week
 
-def publish_yesterdays_results():
+def publish_yesterdays_results() -> None:
     try:
         logger.debug("Attempting to get yesterday's info")
         yesterdays_info = get_yesterdays_info()

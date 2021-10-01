@@ -37,7 +37,7 @@ def get_counts(counter: CounterConfig, start_date: date, end_date: date, interva
 
     return list(map(lambda datapoint: DataPoint(date=parse_date_from_api(datapoint[0]), count=int(datapoint[1])),r.json()))
 
-def get_count_for_day(counter_data: CounterData, day: date):
+def get_count_for_day(counter_data: CounterData, day: date) -> int:
     if not len(counter_data):
         raise NoDataFoundException(f"No data or unexpected data found (requested date {day.strftime('%Y/%m/%d')})")
 
@@ -48,6 +48,6 @@ def get_count_for_day(counter_data: CounterData, day: date):
 
     return data_match["count"]
 
-def get_count_for_yesterday(counter_data: CounterData):
+def get_count_for_yesterday(counter_data: CounterData) -> int:
     yesterday = date.today() - timedelta(days=1)
     return get_count_for_day(counter_data, yesterday)

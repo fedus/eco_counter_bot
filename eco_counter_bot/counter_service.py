@@ -43,7 +43,7 @@ def filter_counts_by_date(counter_data: CounterData, start_date: date, end_date:
 def sum_counts(counter_data: CounterData) -> int:
     return reduce(lambda current_sum, data_point: current_sum + data_point["count"], counter_data, 0)
 
-def get_yesterdays_info():
+def get_yesterdays_info() -> ProcessedCountData:
     today = date.today()
     yesterday = today - timedelta(days=1)
 

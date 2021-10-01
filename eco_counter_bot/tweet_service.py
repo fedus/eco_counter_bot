@@ -2,6 +2,7 @@ import logging
 import tweepy
 
 from textwrap import wrap
+from tweepy.models import Media
 
 from eco_counter_bot.config import config
 
@@ -18,7 +19,7 @@ class TweetService:
             config.get("TWITTER_ACCESS_SECRET")
         )
 
-    def do_authentication(self, consumer_key, consumer_secret, access_token, access_token_secret):
+    def do_authentication(self, consumer_key, consumer_secret, access_token, access_token_secret) -> None:
         logger.debug("Setting Twitter authentication")
 
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
@@ -26,7 +27,7 @@ class TweetService:
 
         self.api = tweepy.API(auth, wait_on_rate_limit=True)
 
-    def upload_media(self, filename):
+    def upload_media(self, filename) -> Media:
         if config.get("DEV"):
             logger.debug("Not uploading media since program is running in development mode")
             return None
@@ -35,7 +36,7 @@ class TweetService:
 
         return self.api.media_upload(filename=filename)
 
-    def tweet_thread(self, text, lat=None, lon=None, media_filename=None, extra_parts=[], answer_to=None):
+    def tweet_thread(self, text, lat=None, lon=None, media_filename=None, extra_parts=[], answer_to=None) -> list[str]:
         logger.debug("Sending tweet (as thread if necessary)")
 
         media = None

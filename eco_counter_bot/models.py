@@ -51,8 +51,8 @@ class YesterdaysResultsTweetParams(TypedDict):
     counter_count_1: int
     counter_count_2: int
     counter_count_3: int
-    week_reference: str
-    count_last_week_total: int
-    count_preceding_week_total: int
+    year_reference: str
+    count_current_year_total: int
+    count_preceding_year_total: int
     percentage_change_emoji: str
     percentage_change_number: float

@@ -1,18 +1,14 @@
 import logging
 
-from datetime import date, timedelta
-from dateutil.relativedelta import relativedelta
+from datetime import date
 from functools import reduce
-from eco_counter_bot.models import CounterConfig, DateRange
+from eco_counter_bot.models import CounterConfig, DataPoint, DateRange
 from copy import deepcopy
 
 from eco_counter_bot.models import Interval, CounterData, CounterWithSingleCount, CounterWithCounts, CountHighlights
 from eco_counter_bot.counter_api import get_counts
 
 logger = logging.getLogger(f"eco_counter_bot.{__name__}")
-
-class CounterDataMismatch(Exception):
-    pass
 
 class NoDataFoundException(Exception):
     pass
@@ -40,14 +36,27 @@ def flatten(bike_counts: list[CounterData]) -> CounterData:
         last_date = bike_count[-1]["date"]
 
         if data_count != check_data_count or first_date != check_first_date or last_date != check_last_date:
-            raise CounterDataMismatch("Cannot flatten data due to a data mismatch")
+            logger.warn("Likely data mismatch detected during flattening - sums might not be accurate")
 
-    flattened_count = deepcopy(check_counts)
-    other_counts = bike_counts[1:]
+    count_with_most_data_points = max(bike_counts, key=lambda bike_count: len(bike_count))
 
-    for other_count in other_counts:
-        for index, data_point in enumerate(other_count):
-            flattened_count[index]["count"] += data_point["count"]
+    flattened_count = list(
+        map(
+            lambda data_point: DataPoint(date=data_point["date"], count=0),
+            count_with_most_data_points
+        )
+    )
+
+    for count in bike_counts:
+        for flattened_data_point in flattened_count:
+            reference_date = flattened_data_point["date"]
+
+            match_in_count = next(filter(lambda data_point: data_point["date"] == reference_date, count), None)
+
+            if match_in_count:
+                flattened_data_point["count"] += match_in_count["count"]
+            else:
+                logger.warn(f"Missing data point for date {reference_date.strftime('%Y/%m/%d')} while flattening")
 
     return flattened_count
 
@@ -57,10 +66,10 @@ def filter_counts_by_date(counter_data: CounterData, start_date: date, end_date:
 def sum_counts(counter_data: CounterData) -> int:
     return reduce(lambda current_sum, data_point: current_sum + data_point["count"], counter_data, 0)
 
-def get_counts_for_period(counters: list[CounterConfig], period: DateRange) -> list[CounterWithCounts]:
+def get_counts_for_period(counters: list[CounterConfig], period: DateRange, interval: Interval = Interval.DAYS) -> list[CounterWithCounts]:
     return list(
         map(
-            lambda counter: {"counter": counter, "counts": get_counts(counter, period["start"], period["end"], Interval.DAYS)},
+            lambda counter: {"counter": counter, "counts": get_counts(counter, period["start"], period["end"], interval)},
             counters
         )
     )

@@ -23,7 +23,7 @@ TWEET_TEMPLATE = Template(f"""Yesterday’s {EMOJIS['BICYCLE']} counts ($yesterd
 
 $year_reference year's total: $count_current_year_total
 Preceding year's relative total: $count_preceding_year_total
-Percentage change: $percentage_change_emoji $percentage_change_number
+Change: $percentage_change_emoji $percentage_change_number%
 """)
 
 def is_current_week(reference_date: date) -> bool:
@@ -38,7 +38,7 @@ def get_highlights_for_period(period: DateRange, interval: Interval) -> CountHig
     counters_with_counts = get_counts_for_period(all_counters, period, interval)
     return extract_highlights(counters_with_counts)
 
-def format_number_lb(number: int) -> str:
+def format_number_lb(number: int or float) -> str:
     return format_number(number, 'lb_LU')
 
 def publish_yesterdays_results() -> None:
@@ -91,7 +91,7 @@ def publish_yesterdays_results() -> None:
         count_current_year_total = format_number_lb(current_year_highlights["period_total_count"]),
         count_preceding_year_total = format_number_lb(preceding_year_highlights["period_total_count"]),
         percentage_change_emoji = EMOJIS["DOWN_RIGHT_ARROW"] if percentage_change < 0 else EMOJIS["UP_RIGHT_ARROW"],
-        percentage_change_number = round(percentage_change, 1)
+        percentage_change_number = format_number_lb(round(percentage_change, 1))
     )
 
     logger.debug(f"Assembled tweet params: {tweet_template_params}")

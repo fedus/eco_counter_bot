@@ -74,7 +74,7 @@ def publish_yesterdays_results() -> None:
 
     logger.debug(f"Yesterday's date is {yesterday}")
 
-    percentage_change = (current_year_highlights["period_total_count"] - preceding_year_highlights["period_total_count"]) / current_year_highlights["period_total_count"] * 100
+    percentage_change = (current_year_highlights["period_total_count"] - preceding_year_highlights["period_total_count"]) / preceding_year_highlights["period_total_count"] * 100
 
     yesterdays_ordered_counts = current_week_highlights["most_recent_counts_sorted"]
 

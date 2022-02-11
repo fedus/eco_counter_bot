@@ -13,7 +13,7 @@ from eco_counter_bot.emojis import EMOJIS
 
 logger = logging.getLogger(f"eco_counter_bot.{__name__}")
 
-TWEET_TEMPLATE = Template(f"""Yesterday’s {EMOJIS['BICYCLE']} counts ($yesterdays_date):
+TWEET_TEMPLATE = Template(f"""Yesterday's {EMOJIS['BICYCLE']} counts ($yesterdays_date):
 
 {EMOJIS['CHECKERED_FLAG']} Total: $count_total
 

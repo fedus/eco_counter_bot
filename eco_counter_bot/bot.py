@@ -6,9 +6,10 @@ from dateutil.relativedelta import relativedelta
 from babel.numbers import format_number
 
 from eco_counter_bot.counters import counters as all_counters
-from eco_counter_bot.models import CountHighlights, DateRange, Interval, YesterdaysResultsTweetParams
+from eco_counter_bot.models import CounterData, DataPoint, DateRange, Interval, YesterdaysResultsTweetParams
 from eco_counter_bot.counter_service import NoDataFoundException, get_counts_for_period, extract_highlights
 from eco_counter_bot.tweet_service import tweet_service
+from eco_counter_bot.grapher import generate_yearly_plot
 from eco_counter_bot.emojis import EMOJIS
 
 logger = logging.getLogger(f"eco_counter_bot.{__name__}")
@@ -34,12 +35,22 @@ def is_current_week(reference_date: date) -> bool:
 def is_current_year(reference_date: date) -> bool:
     return reference_date.year == date.today().year
 
-def get_highlights_for_period(period: DateRange, interval: Interval) -> CountHighlights:
-    counters_with_counts = get_counts_for_period(all_counters, period, interval)
-    return extract_highlights(counters_with_counts)
-
 def format_number_lb(number: int or float) -> str:
     return format_number(number, 'lb_LU')
+
+def to_daily_total(counter_data: CounterData) -> CounterData:
+    summed = [counter_data[0]]
+
+    for index, current_count in enumerate(counter_data):
+        if index > 0:
+            dp = DataPoint(
+                date=current_count["date"],
+                count=(summed[index-1]["count"] + current_count["count"])
+            )
+
+            summed.append(dp)
+
+    return summed
 
 def publish_yesterdays_results() -> None:
     today = date.today()
@@ -60,11 +71,22 @@ def publish_yesterdays_results() -> None:
         end=yesterday + relativedelta(years=-1)
     )
 
+    preceding_year_full = DateRange(
+        start=yesterday.replace(year=yesterday.year - 1, month=1, day=1),
+        end=yesterday.replace(year=yesterday.year - 1, month=12, day=31)
+    )
+
     try:
         logger.debug("Attempting to get highlights")
-        current_week_highlights = get_highlights_for_period(current_week, Interval.DAYS)
-        current_year_highlights = get_highlights_for_period(current_year_relative, Interval.MONTHS)
-        preceding_year_highlights = get_highlights_for_period(preceding_year_relative, Interval.MONTHS)
+        current_week_counts = get_counts_for_period(all_counters, current_week, Interval.DAYS)
+        current_year_counts = get_counts_for_period(all_counters, current_year_relative, Interval.DAYS)
+        preceding_year_relative_counts = get_counts_for_period(all_counters, preceding_year_relative, Interval.MONTHS)
+        preceding_year_full_counts = get_counts_for_period(all_counters, preceding_year_full, Interval.DAYS)
+
+        current_week_highlights = extract_highlights(current_week_counts)
+        current_year_highlights = extract_highlights(current_year_counts)
+        preceding_year_relative_highlights = extract_highlights(preceding_year_relative_counts)
+        preceding_year_full_highlights = extract_highlights(preceding_year_full_counts)
     except NoDataFoundException as e:
         logger.warning(e, exc_info=True)
         return
@@ -74,7 +96,7 @@ def publish_yesterdays_results() -> None:
 
     logger.debug(f"Yesterday's date is {yesterday}")
 
-    percentage_change = (current_year_highlights["period_total_count"] - preceding_year_highlights["period_total_count"]) / preceding_year_highlights["period_total_count"] * 100
+    percentage_change = (current_year_highlights["period_total_count"] - preceding_year_relative_highlights["period_total_count"]) / preceding_year_relative_highlights["period_total_count"] * 100
 
     yesterdays_ordered_counts = current_week_highlights["most_recent_counts_sorted"]
 
@@ -89,7 +111,7 @@ def publish_yesterdays_results() -> None:
         counter_count_3 = format_number_lb(yesterdays_ordered_counts[2]["count"]),
         year_reference = "This" if is_current_year(yesterday) else "Last",
         count_current_year_total = format_number_lb(current_year_highlights["period_total_count"]),
-        count_preceding_year_total = format_number_lb(preceding_year_highlights["period_total_count"]),
+        count_preceding_year_total = format_number_lb(preceding_year_relative_highlights["period_total_count"]),
         percentage_change_emoji = EMOJIS["DOWN_RIGHT_ARROW"] if percentage_change < 0 else EMOJIS["UP_RIGHT_ARROW"],
         percentage_change_number = format_number_lb(round(percentage_change, 1))
     )
@@ -100,8 +122,13 @@ def publish_yesterdays_results() -> None:
 
     logger.info(f"Assembled tweet message: {tweet_message}")
 
+    preceding_year_daily_total = to_daily_total(preceding_year_full_highlights["flattened_counts"])
+    current_year_daily_total = to_daily_total(current_year_highlights["flattened_counts"])
+
+    generate_yearly_plot(preceding_year_daily_total, current_year_daily_total)
+
     try:
         logger.debug("Attempting to tweet")
-        tweet_service.tweet_thread(tweet_message)
+        tweet_service.tweet_thread(tweet_message, media_filename="tmp/daily_fig.png")
     except Exception as e:
         logger.error(f"Error while tweeting: {e}", exc_info=True)

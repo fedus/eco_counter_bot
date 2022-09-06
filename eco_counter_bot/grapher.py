@@ -6,6 +6,7 @@ import plotly.express as px
 from arrow import Arrow
 from datetime import datetime
 
+from eco_counter_bot.utils import format_number_lb
 from eco_counter_bot.models import CounterData, DataPoint
 
 def customize_legend_name(fig, new_names):
@@ -58,7 +59,7 @@ def generate_yearly_plot(previous_year_cd: CounterData, current_year_cd: Counter
                         mode = 'markers + text',
                         marker = {'color':'red', 'size':14},
                         showlegend = False,
-                        text = f"<b>{int(fig.data[1].y[cutoff_day_index]):,}</b>",
+                        text = f"<b>{format_number_lb(int(fig.data[1].y[cutoff_day_index]))}</b>",
                         textposition='middle right',
                         textfont = { 'color': 'red' })
 
@@ -66,12 +67,12 @@ def generate_yearly_plot(previous_year_cd: CounterData, current_year_cd: Counter
                         mode = 'markers + text',
                         marker = {'color':'blue', 'size':14},
                         showlegend = False,
-                        text = f"<b>{int(fig.data[0].y[cutoff_day_index]):,}</b>",
+                        text = f"<b>{format_number_lb(int(fig.data[0].y[cutoff_day_index])):}</b>",
                         textposition='top left',
                         textfont = { 'color': 'blue' })
 
     fig.add_hline(y=fig.data[1].y[-1], line_dash="dot", line_color="red",
-        annotation_text=f"{previous_year_simple} total: <b>{int(fig.data[1].y[-1]):,}</b>", 
+        annotation_text=f"{previous_year_simple} total: <b>{format_number_lb(int(fig.data[1].y[-1]))}</b>", 
         annotation_position="top right",
         annotation_font_color="red")
 

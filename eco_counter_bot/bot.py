@@ -3,8 +3,8 @@ import logging
 from string import Template
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
-from babel.numbers import format_number
 
+from eco_counter_bot.utils import format_number_lb
 from eco_counter_bot.counters import counters as all_counters
 from eco_counter_bot.models import CounterData, DataPoint, DateRange, Interval, YesterdaysResultsTweetParams
 from eco_counter_bot.counter_service import NoDataFoundException, get_counts_for_period, extract_highlights
@@ -41,9 +41,6 @@ def is_current_week(reference_date: date) -> bool:
 
 def is_current_year(reference_date: date) -> bool:
     return reference_date.year == date.today().year
-
-def format_number_lb(number: int or float) -> str:
-    return format_number(number, 'lb_LU')
 
 def to_daily_total(counter_data: CounterData) -> CounterData:
     summed = [counter_data[0]]

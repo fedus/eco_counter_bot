@@ -18,14 +18,21 @@ TWEET_TEMPLATE = Template(f"""Yesterday's {EMOJIS['BICYCLE']} counts ($yesterday
 
 {EMOJIS['CHECKERED_FLAG']} Total: $count_total
 
+Top 3:
 {EMOJIS['MEDAL_1']} $counter_name_1: $counter_count_1
 {EMOJIS['MEDAL_2']} $counter_name_2: $counter_count_2
 {EMOJIS['MEDAL_3']} $counter_name_3: $counter_count_3
 
 $year_reference year's total: $count_current_year_total
-Preceding year's relative total: $count_preceding_year_total
+Preceding year's total: $count_preceding_year_total
+Preceding year's relative total: $count_preceding_year_relative_total
 Change: $percentage_change_emoji $percentage_change_number%
+
+$more_or_missing_text
 """)
+
+MORE_TEXT = Template(f"$more more than last year's total! {EMOJIS['PARTY']}")
+MISSING_TEXT = Template(f"$missing missing compared to last year's total!")
 
 def is_current_week(reference_date: date) -> bool:
     reference_date_week = reference_date.isocalendar().week
@@ -100,6 +107,11 @@ def publish_yesterdays_results() -> None:
 
     yesterdays_ordered_counts = current_week_highlights["most_recent_counts_sorted"]
 
+    excess_compared_to_last_year = current_year_highlights["period_total_count"] - preceding_year_full_highlights["period_total_count"]
+
+    more_or_missing_text = MORE_TEXT.substitute({ "more": format_number_lb(excess_compared_to_last_year) }) \
+        if excess_compared_to_last_year >= 0 else MISSING_TEXT.substitute({ "missing": format_number_lb(abs(excess_compared_to_last_year)) })
+
     tweet_template_params = YesterdaysResultsTweetParams(
         yesterdays_date = yesterday.strftime("%d/%m"),
         count_total = format_number_lb(current_week_highlights["most_recent_flattened_count"]),
@@ -111,9 +123,11 @@ def publish_yesterdays_results() -> None:
         counter_count_3 = format_number_lb(yesterdays_ordered_counts[2]["count"]),
         year_reference = "This" if is_current_year(yesterday) else "Last",
         count_current_year_total = format_number_lb(current_year_highlights["period_total_count"]),
-        count_preceding_year_total = format_number_lb(preceding_year_relative_highlights["period_total_count"]),
+        count_preceding_year_total = format_number_lb(preceding_year_full_highlights["period_total_count"]),
+        count_preceding_year_relative_total = format_number_lb(preceding_year_relative_highlights["period_total_count"]),
         percentage_change_emoji = EMOJIS["DOWN_RIGHT_ARROW"] if percentage_change < 0 else EMOJIS["UP_RIGHT_ARROW"],
-        percentage_change_number = format_number_lb(round(percentage_change, 1))
+        percentage_change_number = format_number_lb(round(percentage_change, 1)),
+        more_or_missing_text = more_or_missing_text
     )
 
     logger.debug(f"Assembled tweet params: {tweet_template_params}")

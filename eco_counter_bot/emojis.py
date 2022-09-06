@@ -7,4 +7,5 @@ EMOJIS = {
     "DOWN_RIGHT_ARROW": "↘️",
     "UP_RIGHT_ARROW": "↗️",
     "CALENDAR": "📅",
+    "PARTY": "🎉",
 }

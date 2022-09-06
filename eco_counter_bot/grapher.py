@@ -58,7 +58,7 @@ def generate_yearly_plot(previous_year_cd: CounterData, current_year_cd: Counter
                         mode = 'markers + text',
                         marker = {'color':'red', 'size':14},
                         showlegend = False,
-                        text = f"<b>{int(fig.data[1].y[cutoff_day_index])}</b>",
+                        text = f"<b>{int(fig.data[1].y[cutoff_day_index]):,}</b>",
                         textposition='middle right',
                         textfont = { 'color': 'red' })
 
@@ -66,9 +66,14 @@ def generate_yearly_plot(previous_year_cd: CounterData, current_year_cd: Counter
                         mode = 'markers + text',
                         marker = {'color':'blue', 'size':14},
                         showlegend = False,
-                        text = f"<b>{int(fig.data[0].y[cutoff_day_index])}</b>",
+                        text = f"<b>{int(fig.data[0].y[cutoff_day_index]):,}</b>",
                         textposition='top left',
                         textfont = { 'color': 'blue' })
+
+    fig.add_hline(y=fig.data[1].y[-1], line_dash="dot", line_color="red",
+        annotation_text=f"{previous_year_simple} total: <b>{int(fig.data[1].y[-1]):,}</b>", 
+        annotation_position="top right",
+        annotation_font_color="red")
 
     fig.update_yaxes(title_text="<b>Bike</b> counts", secondary_y=False)
     fig.update_yaxes(rangemode="nonnegative")

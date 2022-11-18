@@ -14,13 +14,11 @@ class NoDataFoundException(Exception):
     pass
 
 def get_count_for_day(counter_data: CounterData, day: date) -> int:
-    if not len(counter_data):
-        raise NoDataFoundException(f"No data or unexpected data found (requested date {day.strftime('%Y/%m/%d')})")
-
     data_match = next(filter(lambda count: count["date"] == day, counter_data), None)
 
     if not data_match:
-        raise NoDataFoundException(f"Requested day not found in returned data, looked for {day.strftime('%Y/%m/%d')}, found {counter_data}")
+        logger.warn(f"Requested day not found in returned data, looked for {day.strftime('%Y/%m/%d')}, found {counter_data}. Returning 0")
+        return 0
 
     return data_match["count"]
 
@@ -32,8 +30,8 @@ def flatten(bike_counts: list[CounterData]) -> CounterData:
 
     for bike_count in bike_counts:
         data_count = len(bike_count)
-        first_date = bike_count[0]["date"]
-        last_date = bike_count[-1]["date"]
+        first_date = bike_count[0]["date"] if data_count else None
+        last_date = bike_count[-1]["date"] if data_count else None
 
         if data_count != check_data_count or first_date != check_first_date or last_date != check_last_date:
             logger.warn("Likely data mismatch detected during flattening - sums might not be accurate")

@@ -84,7 +84,7 @@ class TweetService:
                 logger.debug("Not sending tweet since program is running in development mode")
                 return ["TWEET_ID1", "TWEET_ID2", "TWEET_ID3"]
             else:
-                last_status = self.client.create_tweet(**tweet_params).id
+                last_status = self.client.create_tweet(**tweet_params).data["id"]
                 tweet_ids.append(last_status)
 
         return tweet_ids

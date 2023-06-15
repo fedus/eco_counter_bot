@@ -17,12 +17,10 @@ class TweetService:
             config.get("TWITTER_API_KEY"),
             config.get("TWITTER_API_SECRET"),
             config.get("TWITTER_ACCESS_TOKEN"),
-            config.get("TWITTER_ACCESS_SECRET"),
-            config.get("TWITTER_CONSUMER_KEY"),
-            config.get("TWITTER_CONSUMER_SECRET")
+            config.get("TWITTER_ACCESS_SECRET")
         )
 
-    def do_authentication(self, consumer_key, consumer_secret, access_token, access_token_secret, consumer_key, consumer_secret) -> None:
+    def do_authentication(self, consumer_key, consumer_secret, access_token, access_token_secret) -> None:
         logger.debug("Setting Twitter authentication")
 
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
